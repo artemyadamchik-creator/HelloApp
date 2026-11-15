@@ -1,11 +1,6 @@
 {
-    "project": {
-        "name": "MyNewApp",
-        "platform": "ios"
-    },
-    "ios": {
-        "path": ".",
-        "scheme": "MyNewApp"
-    },
-    "project_name": "MyNewApp"
+    "project": "MyNewApp",
+    "path": ".",
+    "scheme": "MyNewApp",
+    "configuration": "Debug"
 }
