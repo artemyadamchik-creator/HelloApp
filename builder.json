@@ -1,1 +1,11 @@
-{"project_name": "MyNewApp", "ios_path": "."}
+{
+    "project": {
+        "name": "MyNewApp",
+        "platform": "ios"
+    },
+    "ios": {
+        "path": ".",
+        "scheme": "MyNewApp"
+    },
+    "project_name": "MyNewApp"
+}
