@@ -1,0 +1,91 @@
+name: iOS Build
+run-name: iOS Build ${{ inputs.build_id }}
+on:
+  workflow_dispatch:
+    inputs:
+      build_id:
+        description: 'Unique build identifier'
+        required: true
+        type: string
+      snapshot_ref:
+        description: 'Ref holding the working-tree snapshot to build'
+        required: false
+        type: string
+        default: ''
+      ios_path:
+        description: 'Path to iOS project'
+        required: false
+        type: string
+        default: '.'
+      scheme:
+        description: 'Xcode scheme'
+        required: false
+        type: string
+        default: ''
+      use_signing:
+        description: 'Enable code signing'
+        required: false
+        type: boolean
+        default: false
+      configuration:
+        description: 'Build configuration'
+        required: false
+        type: string
+        default: 'Debug'
+      flutter_version:
+        description: 'Flutter version'
+        required: false
+        type: string
+        default: ''
+      jdk_version:
+        description: 'JDK version'
+        required: false
+        type: string
+        default: '17'
+      profile:
+        description: 'Builder profile JSON'
+        required: false
+        type: string
+        default: '{}'
+      build_number:
+        description: 'CFBundleVersion'
+        required: false
+        type: string
+        default: ''
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Checkout working-tree snapshot
+        if: inputs.snapshot_ref != ''
+        env:
+          SNAPSHOT_REF: ${{ inputs.snapshot_ref }}
+        run: |
+          set -e
+          git fetch --depth=1 origin "+$SNAPSHOT_REF:refs/heads/snapshot"
+          git checkout --force snapshot
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode Project
+        run: xcodegen generate
+      - name: Build IPA (Unsigned)
+        run: |
+          xcodebuild clean archive \
+            -project MyNewApp.xcodeproj \
+            -scheme MyNewApp \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath $PWD/build/MyNewApp.xcarchive \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+      - name: Create IPA
+        run: |
+          mkdir -p Payload
+          cp -r build/MyNewApp.xcarchive/Products/Applications/MyNewApp.app Payload/
+          zip -r MyNewApp.ipa Payload
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: MyNewApp.ipa
